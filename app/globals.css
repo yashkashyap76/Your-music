@@ -1,0 +1,32 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-ink: #101014;
+  --color-paper: #F2F0EA;
+}
+
+html.light {
+  --color-ink: #F2F0EA;
+  --color-paper: #101014;
+}
+
+html, body {
+  height: 100%;
+}
+
+* {
+  scrollbar-width: thin;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-paper);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-drift, .animate-pulseSoft {
+    animation: none !important;
+  }
+}
