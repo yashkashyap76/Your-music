@@ -1,73 +1,73 @@
 "use client";
-import { useState } from "react";
 
-export default function TrackCard({ track }) {
-  const [videoId, setVideoId] = useState(null);
-  const [loadingVideo, setLoadingVideo] = useState(false);
-  const [videoError, setVideoError] = useState(null);
+import { usePlayer } from "../context/PlayerContext";
 
-  async function playFullSong() {
-    setLoadingVideo(true);
-    setVideoError(null);
-    try {
-      const res = await fetch("/api/youtube/search", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: `${track.artists} ${track.name} official audio` }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Could not find video");
-      setVideoId(data.videoId);
-    } catch (err) {
-      setVideoError(err.message);
-    } finally {
-      setLoadingVideo(false);
+export default function TrackCard({ track, queue = [] }) {
+  const { playTrack, playQueue, currentTrack, isPlaying } = usePlayer();
+
+  const isCurrent =
+    currentTrack?.name === track?.name &&
+    currentTrack?.artists === track?.artists;
+
+  const handlePlay = () => {
+    // Agar queue available hai to queue ke saath play karo
+    if (queue.length > 0) {
+      const index = queue.findIndex(
+        (item) =>
+          item.name === track.name &&
+          item.artists === track.artists
+      );
+
+      playQueue(queue, index >= 0 ? index : 0);
+    } else {
+      // Sirf ek track play karo
+      playTrack(track);
     }
-  }
+  };
 
   return (
     <div className="group flex flex-col gap-3 rounded-2xl border border-paper/10 bg-paper/5 p-3 hover:border-paper/30 transition">
-      <a href={track.externalUrl} target="_blank" rel="noreferrer">
-        <div className="aspect-square w-full overflow-hidden rounded-xl bg-ink/40">
-          {track.image && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={track.image}
-              alt={track.album}
-              className="h-full w-full object-cover group-hover:scale-105 transition"
-            />
-          )}
-        </div>
-        <div className="mt-2">
-          <p className="font-body text-sm text-paper truncate">{track.name}</p>
-          <p className="font-body text-xs text-paper/50 truncate">{track.artists}</p>
-        </div>
-      </a>
-
-      {videoId ? (
-        <div className="aspect-video w-full rounded-lg overflow-hidden">
-          <iframe
-            src={`https://www.youtube.com/embed/${videoId}?autoplay=1`}
-            className="w-full h-full"
-            allow="autoplay; encrypted-media"
-            allowFullScreen
-            title={`${track.name} player`}
+      
+      {/* Album Image */}
+      <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-ink/40">
+        {track.image && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={track.image}
+            alt={track.album || track.name}
+            className="h-full w-full object-cover group-hover:scale-105 transition"
           />
-        </div>
-      ) : (
+        )}
+
+        {/* Play Button */}
         <button
-          onClick={playFullSong}
-          disabled={loadingVideo}
-          className="w-full py-2 rounded-full bg-paper text-ink text-xs font-body disabled:opacity-40"
+          onClick={handlePlay}
+          className="absolute bottom-3 right-3 w-11 h-11 rounded-full bg-paper text-ink flex items-center justify-center shadow-lg hover:scale-110 transition"
+          title={isCurrent && isPlaying ? "Playing" : "Play"}
         >
-          {loadingVideo ? "Finding video…" : "▶ Play full song"}
+          {isCurrent && isPlaying ? "⏸" : "▶"}
         </button>
-      )}
+      </div>
 
-      {videoError && <p className="text-xs text-moods-stressed font-body">{videoError}</p>}
+      {/* Song Info */}
+      <div>
+        <p className="font-body text-sm text-paper truncate">
+          {track.name}
+        </p>
 
+        <p className="font-body text-xs text-paper/50 truncate">
+          {track.artists}
+        </p>
+      </div>
+
+      {/* Preview Audio - fallback */}
       {track.previewUrl && (
-        <audio controls src={track.previewUrl} className="w-full h-8" />
+        <audio
+          controls
+          preload="none"
+          src={track.previewUrl}
+          className="w-full h-8"
+        />
       )}
     </div>
   );
