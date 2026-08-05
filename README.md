@@ -18,3 +18,7 @@ https://vibbox.netlify.app/
 * **Language:** JavaScript
 * **Styling:** Tailwind CSS
 * **Deployment:** Netlify
+
+
+
+ bug aa rha hai n w8 I will fix itt
